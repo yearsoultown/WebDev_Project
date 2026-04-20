@@ -25,7 +25,9 @@ services:
       db:
         condition: service_healthy
     command: >
-      sh -c "python manage.py migrate --noinput &&
+      sh -c "python manage.py makemigrations users equipment bookings --noinput &&
+             python manage.py migrate --noinput &&
+             python manage.py seed_equipment &&
              python manage.py collectstatic --noinput &&
              gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     volumes:
