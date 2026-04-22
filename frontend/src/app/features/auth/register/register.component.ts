@@ -8,107 +8,60 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './register.component.html',
   styleUrls: ['./register.component.css'],
-  template: `
-    <div class="auth-page">
-      <div class="auth-panel">
-        <div class="auth-panel-inner">
-          <p class="label">Gear Rental</p>
-          <h2 class="auth-panel-title">Join<br/>Our<br/>Platform</h2>
-          <p class="auth-panel-desc">Access premium photo and video equipment at competitive daily rates.</p>
-        </div>
-      </div>
-
-      <div class="auth-form-wrap">
-        <div class="auth-form-inner">
-          <div class="auth-heading">
-            <p class="label">Account</p>
-            <h1 class="auth-title">Create Account</h1>
-          </div>
-
-          <form #registerForm="ngForm" (ngSubmit)="onSubmit(registerForm)" novalidate>
-            <div class="form-group">
-              <label class="form-label">Username</label>
-              <input type="text" name="username" [(ngModel)]="payload.username" required #usernameField="ngModel"
-                     class="form-input" placeholder="your_username" />
-              @if (usernameField.invalid && registerForm.submitted) {
-                <p class="form-error">Required</p>
-              }
-              @if (fieldErrors['username']) {
-                <p class="form-error">{{ fieldErrors['username'] }}</p>
-              }
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Email</label>
-              <input type="email" name="email" [(ngModel)]="payload.email" required email #emailField="ngModel"
-                     class="form-input" placeholder="you@example.com" />
-              @if (emailField.invalid && registerForm.submitted) {
-                <p class="form-error">{{ emailField.errors?.['required'] ? 'Required' : 'Invalid email' }}</p>
-              }
-              @if (fieldErrors['email']) {
-                <p class="form-error">{{ fieldErrors['email'] }}</p>
-              }
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Password</label>
-              <input type="password" name="password" [(ngModel)]="payload.password" required minlength="6" #passwordField="ngModel"
-                     class="form-input" placeholder="Min 6 characters" />
-              @if (passwordField.invalid && registerForm.submitted) {
-                <p class="form-error">{{ passwordField.errors?.['required'] ? 'Required' : 'Min 6 characters' }}</p>
-              }
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Confirm Password</label>
-              <input type="password" name="password_confirm" [(ngModel)]="payload.password_confirm" required #confirmField="ngModel"
-                     class="form-input" placeholder="Repeat password" />
-              @if (registerForm.submitted && payload.password !== payload.password_confirm && payload.password_confirm) {
-                <p class="form-error">Passwords do not match</p>
-              }
-            </div>
-
-            @if (serverError) {
-              <p class="form-error" style="margin-bottom:1rem">{{ serverError }}</p>
-            }
-
-            <button type="submit" [disabled]="loading" class="btn btn-primary submit-btn">
-              {{ loading ? 'Creating...' : 'Create Account' }}
-            </button>
-          </form>
-
-          <p class="auth-footer">
-            Already have an account?
-            <a routerLink="/login" class="auth-link">Sign in</a>
-          </p>
-        </div>
-      </div>
-    </div>
-  `,
 })
 export class RegisterComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  payload = { username: '', email: '', password: '', password_confirm: '' };
+
+  payload = {
+    username: '',
+    email: '',
+    password: '',
+    password_confirm: '',
+  };
+
   loading = false;
   serverError = '';
   fieldErrors: Record<string, string> = {};
 
   onSubmit(form: NgForm): void {
-    if (form.invalid || this.payload.password !== this.payload.password_confirm) return;
+    if (form.invalid || this.payload.password !== this.payload.password_confirm) {
+      return;
+    }
+
     this.loading = true;
     this.serverError = '';
     this.fieldErrors = {};
+
     this.authService.register(this.payload).subscribe({
-      next: () => { this.loading = false; this.router.navigate(['/login']); },
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/login']);
+      },
       error: (err) => {
         this.loading = false;
-        if (err.error?.username) this.fieldErrors['username'] = err.error.username[0];
-        if (err.error?.email) this.fieldErrors['email'] = err.error.email[0];
-        if (err.error?.detail) this.serverError = err.error.detail;
-        if (err.error?.password_confirm) this.serverError = err.error.password_confirm[0];
-        if (!this.serverError && !Object.keys(this.fieldErrors).length) this.serverError = 'Registration failed';
+
+        if (err.error?.username) {
+          this.fieldErrors['username'] = err.error.username[0];
+        }
+
+        if (err.error?.email) {
+          this.fieldErrors['email'] = err.error.email[0];
+        }
+
+        if (err.error?.detail) {
+          this.serverError = err.error.detail;
+        }
+
+        if (err.error?.password_confirm) {
+          this.serverError = err.error.password_confirm[0];
+        }
+
+        if (!this.serverError && !Object.keys(this.fieldErrors).length) {
+          this.serverError = 'Registration failed';
+        }
       },
     });
   }

@@ -1,0 +1,108 @@
+<div class="page">
+  <div class="container">
+    <div class="page-header">
+      <p class="label">Account</p>
+      <h1 class="page-title">My Bookings</h1>
+    </div>
+
+    <div class="page-body">
+      @if (loading) {
+        <div class="skeleton-rows">
+          @for (i of [1,2,3,4]; track i) {
+            <div class="skeleton-row"></div>
+          }
+        </div>
+      }
+
+      @if (error) {
+        <div class="error-state">{{ error }}</div>
+      }
+
+      @if (!loading && !error) {
+        @if (bookings.length === 0) {
+          <div class="empty-state">
+            <p class="empty-label">No bookings yet</p>
+            <a routerLink="/catalog" class="browse-link">
+              Browse Equipment →
+            </a>
+          </div>
+        } @else {
+          <table class="bookings-table">
+            <thead>
+              <tr>
+                <th class="th th-num">#</th>
+                <th class="th">Equipment</th>
+                <th class="th th-hide-md">Period</th>
+                <th class="th th-hide-sm">Total</th>
+                <th class="th">Status</th>
+                <th class="th th-right"></th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (booking of bookings; track booking.id; let i = $index) {
+                <tr class="tr">
+                  <td class="td td-num">{{ i + 1 }}</td>
+
+                  <td class="td">
+                    <div class="equipment-cell">
+                      @if (booking.equipment_image) {
+                        <img
+                          [src]="booking.equipment_image"
+                          [alt]="booking.equipment_name"
+                          class="equipment-thumb"
+                        />
+                      } @else {
+                        <div class="equipment-thumb-empty"></div>
+                      }
+
+                      <span class="equipment-name">
+                        {{ booking.equipment_name }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td class="td td-hide-md">
+                    <span class="period">
+                      {{ booking.start_date }}
+                      <span class="period-sep">→</span>
+                      {{ booking.end_date }}
+                    </span>
+                  </td>
+
+                  <td class="td td-hide-sm">
+                    <span class="total-price">
+                      ₸{{ booking.total_price | number:'1.0-0' }}
+                    </span>
+                  </td>
+
+                  <td class="td">
+                    <span [class]="statusClass(booking.status)">
+                      {{ booking.status | uppercase }}
+                    </span>
+                  </td>
+
+                  <td class="td td-right">
+                    @if (booking.status !== 'cancelled') {
+                      <button
+                        (click)="cancelBooking(booking)"
+                        [disabled]="cancellingId === booking.id"
+                        class="cancel-btn"
+                      >
+                        {{ cancellingId === booking.id ? '...' : 'Cancel' }}
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          @if (cancelError) {
+            <p class="cancel-error">{{ cancelError }}</p>
+          }
+        }
+      }
+    </div>
+  </div>
+</div>

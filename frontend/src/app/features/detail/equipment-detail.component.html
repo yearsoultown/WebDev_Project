@@ -1,0 +1,209 @@
+<div class="page">
+  @if (loading) {
+    <div class="container-xl">
+      <div class="skeleton-layout">
+        <div class="skeleton skeleton-img"></div>
+        <div style="padding-top: 1rem">
+          <div class="skeleton skeleton-line" style="width: 25%"></div>
+          <div
+            class="skeleton skeleton-line"
+            style="width: 80%; height: 28px; margin-top: 0.5rem"
+          ></div>
+          <div
+            class="skeleton skeleton-line"
+            style="width: 33%; height: 20px; margin-top: 0.5rem"
+          ></div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (error && !loading) {
+    <div class="container-xl">
+      <div class="error-state">
+        <p class="error-label">Not found</p>
+        <a routerLink="/catalog" class="back-link">← Catalog</a>
+      </div>
+    </div>
+  }
+
+  @if (!loading && equipment) {
+    <div class="breadcrumb">
+      <div class="container-xl">
+        <nav class="breadcrumb-inner">
+          <a routerLink="/catalog">Catalog</a>
+          <span class="breadcrumb-sep">/</span>
+          <span>{{ equipment.category_detail?.name }}</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">{{ equipment.name }}</span>
+        </nav>
+      </div>
+    </div>
+
+    <div class="container-xl">
+      <div class="detail-grid">
+        <div>
+          <div class="product-image">
+            @if (equipment.image) {
+              <img [src]="equipment.image" [alt]="equipment.name" />
+            } @else {
+              <div class="image-placeholder">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1"
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1"
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="about-section">
+            <p class="label">About</p>
+            <p class="about-text">{{ equipment.description }}</p>
+          </div>
+        </div>
+
+        <div class="product-info">
+          <div class="product-header">
+            <div class="product-meta">
+              <p class="label">{{ equipment.category_detail?.name }}</p>
+              <span
+                class="avail-indicator"
+                [class.available]="equipment.is_available"
+                [class.unavailable]="!equipment.is_available"
+              >
+                <span
+                  class="dot"
+                  [class.dot-green]="equipment.is_available"
+                  [class.dot-gray]="!equipment.is_available"
+                ></span>
+                {{ equipment.is_available ? 'Available' : 'Unavailable' }}
+              </span>
+            </div>
+
+            <h1 class="product-name">{{ equipment.name }}</h1>
+
+            <div class="product-price">
+              <span class="price-value">
+                ₸{{ equipment.daily_rate | number:'1.0-0' }}
+              </span>
+              <span class="price-unit">/ day</span>
+            </div>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="booking-section">
+            <p class="section-label">Rental Period</p>
+
+            <div class="date-grid">
+              <div>
+                <label class="form-label">From</label>
+                <input
+                  type="date"
+                  [(ngModel)]="startDate"
+                  [min]="today"
+                  class="date-input"
+                />
+              </div>
+
+              <div>
+                <label class="form-label">To</label>
+                <input
+                  type="date"
+                  [(ngModel)]="endDate"
+                  [min]="startDate || today"
+                  class="date-input"
+                />
+              </div>
+            </div>
+
+            @if (getDays() > 0) {
+              <div class="price-summary">
+                <span class="summary-days">
+                  {{ getDays() }} {{ getDays() === 1 ? 'day' : 'days' }}
+                  × ₸{{ equipment.daily_rate | number:'1.0-0' }}
+                </span>
+                <span class="summary-total">
+                  ₸{{ getTotal() | number:'1.0-0' }}
+                </span>
+              </div>
+            }
+
+            @if (availabilityMessage) {
+              <div
+                class="status-msg"
+                [class.success]="isAvailable"
+                [class.error]="!isAvailable"
+              >
+                <span
+                  class="dot"
+                  [class.dot-green]="isAvailable"
+                  [class.dot-red]="!isAvailable"
+                ></span>
+                {{ availabilityMessage }}
+              </div>
+            }
+
+            @if (bookingMessage) {
+              <div
+                class="status-msg"
+                [class.success]="bookingSuccess"
+                [class.error]="!bookingSuccess"
+              >
+                <span
+                  class="dot"
+                  [class.dot-green]="bookingSuccess"
+                  [class.dot-red]="!bookingSuccess"
+                ></span>
+                {{ bookingMessage }}
+              </div>
+            }
+
+            <div class="action-buttons">
+              <button
+                (click)="checkAvailability()"
+                [disabled]="!startDate || !endDate || checkingAvailability"
+                class="btn btn-outline"
+              >
+                {{ checkingAvailability ? 'Checking...' : 'Check Availability' }}
+              </button>
+
+              <button
+                (click)="bookEquipment()"
+                [disabled]="!startDate || !endDate || booking || !equipment.is_available"
+                class="btn btn-primary"
+              >
+                {{
+                  booking
+                    ? 'Booking...'
+                    : (authService.isAuthenticated() ? 'Book Now' : 'Sign In to Book')
+                }}
+              </button>
+            </div>
+
+            @if (!authService.isAuthenticated()) {
+              <p class="signin-hint">
+                <a routerLink="/login">Sign in</a> to make a booking
+              </p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
