@@ -4,5 +4,5 @@ Team members:
 2. Berenbay Yernar
 3. Khodjabergen Nurbek
 
-Project name: Camera rent
+Project name: Gear Rental
 
